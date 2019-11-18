@@ -1,35 +1,28 @@
 from statistics import mean
+from math import log
 
-def polards_kangaroo(generator, prime, y, lower_bound, upper_bound, leap_range, range_constant=4):
-    next_step = lambda y: pow(2, y % leap_range)
-    next_value = lambda y: (y * pow(generator, next_step(y), prime)) % prime
-    
-    n = int(mean([ i for i in range(leap_range) ]) * range_constant)
+
+def pollards_kangaroo(generator, prime, y, lower_bound, upper_bound, range_constant=4):
+    def next_step(n):
+        return pow(2, n % leap_range)  # mod p
+
+    def next_value(n):
+        return (n * pow(generator, next_step(n), prime)) % prime
+
+    leap_range = int(log(upper_bound - lower_bound) / log(range_constant))
+    n = range_constant * pow(2, leap_range - 1) // leap_range
 
     tame_x = 0
     tame_y = pow(generator, upper_bound, prime)
     for _ in range(n):
         tame_x += next_step(tame_y)
-        tame_y = next_value(tame_y)   
+        tame_y = next_value(tame_y)
 
     wild_x = 0
     wild_y = y
     while wild_x < (upper_bound - lower_bound + tame_x):
         wild_x += next_step(wild_y)
         wild_y = next_value(wild_y)
-
+        # print(".", end="")
         if wild_y == tame_y:
-            return upper_bound + tame_x - wild_x
-
-
-
-if __name__ == "__main__":
-
-    p = 11470374874925275658116663507232161402086650258453896274534991676898999262641581519101074740642369848233294239851519212341844337347119899874391456329785623
-    q = 335062023296420808191071248367701059461
-    j = 34233586850807404623475048381328686211071196701374230492615844865929237417097514638999377942356150481334217896204702
-    g = 622952335333961296978159266084741085889881358738459939978290179936063635566740258555167783009058567397963466103140082647486611657350811560630587013183357
-    y = 7760073848032689505395005705677365876654629189298052775754597607446617558600394076764814236081991643094239886772481052254010323780165093955236429914607119
-    # y = 9388897478013399550694114614498790691034187453089355259602614074132918843899833277397448144245883225611726912025846772975325932794909655215329941809013733
-
-    print(polards_kangaroo(g, p, y, 0, 2**20, 3))
+            return (upper_bound + tame_x - wild_x) % prime
